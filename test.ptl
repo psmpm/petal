@@ -1,0 +1,5 @@
+const main = fn () void || {
+    @inline(
+        \console.log("hello world");
+    );
+};
