@@ -1,4 +1,5 @@
 const std = @import("std");
+const Tokenizer = @import("Tokenizer.zig");
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
@@ -15,9 +16,12 @@ pub fn main(init: std.process.Init) !void {
         return;
     }
 
-    const file = try std.Io.Dir.cwd().readFileAlloc(io, args[1], gpa, .limited(std.math.maxInt(u32)));
+    const file = try std.Io.Dir.cwd().readFileAlloc(io, args[1], gpa, .unlimited);
     defer gpa.free(file);
 
-    try stdout.print("---\n{s}\n---\n", .{file});
-    try stdout.flush();
+    var tokenizer: Tokenizer = .{ .buffer = file };
+    while (tokenizer.next()) |token| {
+        try stdout.print("{} '{s}'\n", .{ token, file[token.loc.start..token.loc.end] });
+        try stdout.flush();
+    }
 }
