@@ -44,7 +44,6 @@ fn nextChar(tokenizer: *Tokenizer) u8 {
 }
 
 pub fn next(tokenizer: *Tokenizer) ?Token {
-    if (tokenizer.index >= tokenizer.buffer.len) return null;
     var result: Token = .{
         .tag = undefined,
         .loc = .{
@@ -53,23 +52,26 @@ pub fn next(tokenizer: *Tokenizer) ?Token {
         },
     };
     state: switch (State.start) {
-        .start => switch (tokenizer.buffer[tokenizer.index]) {
-            ' ', '\n', '\r', '\t' => {
-                tokenizer.index += 1;
-                result.loc.start = tokenizer.index;
-                continue :state .start;
-            },
-            'a'...'z', 'A'...'Z', '_' => {
-                result.tag = .identifier;
-                continue :state .identifier;
-            },
-            '0'...'9' => continue :state .number,
-            '=' => continue :state .saw_equals,
-            ';' => {
-                tokenizer.index += 1;
-                result.tag = .semicolon;
-            },
-            else => continue :state .invalid,
+        .start => {
+            if (tokenizer.index >= tokenizer.buffer.len) return null;
+            switch (tokenizer.buffer[tokenizer.index]) {
+                ' ', '\n', '\r', '\t' => {
+                    tokenizer.index += 1;
+                    result.loc.start = tokenizer.index;
+                    continue :state .start;
+                },
+                'a'...'z', 'A'...'Z', '_' => {
+                    result.tag = .identifier;
+                    continue :state .identifier;
+                },
+                '0'...'9' => continue :state .number,
+                '=' => continue :state .saw_equals,
+                ';' => {
+                    tokenizer.index += 1;
+                    result.tag = .semicolon;
+                },
+                else => continue :state .invalid,
+            }
         },
         .invalid => {
             switch (tokenizer.nextChar()) {
